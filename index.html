@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>График Смяна</title>
+    
+    <!-- Задължителни мета тагове за отваряне като уеб приложение -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#ffffff">
+
+    <!-- Връзка към manifest файла -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Иконки -->
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
+
+    <style>
+        :root {
+            --fb-blue: #1877f2;
+            --fb-bg: #f0f2f5;
+            --fb-card: #ffffff;
+            --fb-text: #050505;
+            --fb-secondary-text: #65676b;
+            --fb-border: #ced0d4;
+            --fb-button-bg: #e4e6eb;
+            --s1: #f02849;
+            --s2: #42b72a;
+            --s3: #f7b928;
+            --alert-red: #f02849;
+            --today-bg: #d0e7ff; 
+            --today-text: #0e5db1;
+            --arrow-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23050505' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        }
+
+        body.dark-mode {
+            --fb-bg: #18191a;
+            --fb-card: #242526;
+            --fb-text: #e4e6eb;
+            --fb-secondary-text: #b0b3b8;
+            --fb-border: #3e4042;
+            --fb-button-bg: #3a3b3c;
+            --today-bg: #1c2b3d;
+            --today-text: #3085e6;
+            --arrow-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23e4e6eb' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        }
+
+        html, body {
+            height: 100%; margin: 0; padding: 0;
+            background-color: var(--fb-bg);
+            color: var(--fb-text);
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex; flex-direction: column;
+            height: 100dvh; max-width: 500px; margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: var(--fb-card); 
+            margin: 8px; border-radius: 20px;
+            display: flex; flex-direction: column; flex: 1;
+            min-height: 0; overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid var(--fb-border);
+        }
+
+        .top-section { 
+            padding: 12px 15px 8px 15px; 
+            flex-shrink: 0; 
+            background: var(--fb-card); 
+            z-index: 50; 
+            position: sticky;
+            top: 0;
+            border-bottom: none;
+        }
+
+        .controls-grid, .buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 6px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .buttons-grid { margin-bottom: 0; }
+
+        .pill-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background-color: var(--fb-button-bg);
+            border-radius: 50px;
+            overflow: hidden;
+            height: 36px;
+            box-sizing: border-box;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        select, .btn-action { 
+            background-color: var(--fb-button-bg); 
+            border: 1.5px solid transparent;
+            padding: 0 4px;
+            border-radius: 50px; 
+            font-weight: 600; 
+            color: var(--fb-text); 
+            font-size: 11px;
+            outline: none; 
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+            cursor: pointer;
+            box-sizing: border-box;
+            text-transform: none;
+        }
+
+        select { 
+            background-image: var(--arrow-icon);
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            background-size: 7px;
+            -webkit-appearance: none; 
+            appearance: none;
+            padding-right: 14px;
+            text-align-last: center;
+        }
+
+        select.changed { color: var(--alert-red); }
+
+        .btn-action { border: none; }
+        .btn-today { background: var(--fb-blue); color: white; }
+
+        .btn-pill {
+            border-radius: 50px;
+            background: transparent;
+            font-size: 14px;
+            border: none !important;
+            padding: 0;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-pill:hover {
+            background: var(--fb-border);
+        }
+
+        .btn-action:active { transform: scale(0.95); opacity: 0.8; }
+        
+        .legend { 
+            background: var(--fb-card); 
+            padding: 10px; 
+            border-radius: 12px; 
+            margin-top: 8px; 
+            font-size: 11px; 
+            border: 1px solid var(--fb-border); 
+            text-align: center; 
+        }
+        .legend-content { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; justify-items: center; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-weight: 600; width: 105px; justify-content: flex-start; color: var(--fb-text); }
+
+        .content-scroll-area { 
+            flex: 1; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
+            margin: 0 10px; 
+            padding-top: 0;
+            padding-bottom: 20px; 
+        }
+
+        .calendar-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-header-sticky {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            position: sticky;
+            top: 0;
+            background: var(--fb-card);
+            z-index: 10;
+            padding-bottom: 4px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .cal-header-cell {
+            text-align: center;
+            padding: 8px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--fb-blue);
+            border-bottom: 2px solid var(--fb-border);
+            margin-bottom: 4px;
+        }
+        .cal-header-cell.weekend { color: #f02849 !important; }
+
+        .cal-cell {
+            background: var(--fb-card);
+            border: 1px solid var(--fb-border);
+            border-radius: 12px;
+            min-height: 65px;
+            padding: 6px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+        }
+
+        .cal-cell.empty {
+            background: transparent;
+            border: none;
+            min-height: 0;
+        }
+
+        .cal-date {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--fb-text);
+        }
+
+        .cal-cell.weekend .cal-date {
+            color: #f02849;
+        }
+
+        .cal-cell.today {
+            background: var(--today-bg) !important;
+            border-color: var(--today-text);
+        }
+
+        .cal-cell.today .cal-date {
+            color: var(--today-text);
+        }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0 4px; margin-top: 0; }
+        thead { position: sticky; top: 0; background: var(--fb-card); z-index: 10; }
+        th { text-align: center; padding: 4px 2px 8px 2px; font-size: 12px; color: var(--fb-blue); border-bottom: 2px solid var(--fb-border); }
+        th.date-header { text-align: left; padding-left: 12px; color: var(--fb-secondary-text); font-size: 9px; }
+
+        .row td { 
+            padding: 10px 2px; 
+            text-align: center; 
+            border-bottom: 1px solid var(--fb-border); 
+            vertical-align: middle; 
+            background: var(--fb-card);
+        }
+
+        .date-cell { text-align: left !important; font-weight: bold; width: 45px; font-size: 14px; padding-left: 12px !important; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+        .date-cell span { font-weight: normal; color: var(--fb-secondary-text); font-size: 9px; display: block; }
+        
+        .row td:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .row.today td { background: var(--today-bg) !important; color: var(--today-text) !important; border-bottom: none !important; }
+
+        .s-tag { display: inline-block; width: 24px; height: 24px; line-height: 24px; border-radius: 50%; font-weight: bold; font-size: 12px; color: white; text-align: center; }
+        .shift-1 { background: var(--s1); }
+        .shift-2 { background: var(--s2); }
+        .shift-3 { background: var(--s3); }
+        
+        .rest-text { color: var(--fb-text); font-weight: bold; font-size: 13px; opacity: 0.8; }
+        .rest-circle { display: inline-block; width: 24px; height: 24px; line-height: 22px; border-radius: 50%; font-weight: bold; font-size: 12px; color: var(--fb-text); text-align: center; border: 1.5px solid var(--fb-border); background: var(--fb-button-bg); }
+
+        .weekend-text { color: #f02849 !important; }
+
+        .bottom-spacer { height: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="card">
+        <div class="top-section">
+            <div class="controls-grid">
+                <select id="monthSelect" onchange="onControlChange(this)"></select>
+                <select id="yearSelect" onchange="onControlChange(this)"></select>
+                <select id="groupSelect" onchange="onGroupChange()"></select>
+            </div>
+
+            <div class="buttons-grid">
+                <button class="btn-action btn-today" onclick="goToToday()">Днес</button>
+                <button class="btn-action" onclick="toggleLegend()">Инфо</button>
+                <div class="pill-container">
+                    <button class="btn-action btn-pill" onclick="toggleTheme()" id="themeBtn">☀️</button>
+                    <button class="btn-action btn-pill" onclick="goToStyle()" title="Стил">✨</button>
+                </div>
+            </div>
+            
+            <div id="legendDiv" class="legend" style="display: none;">
+                <div class="legend-content">
+                    <div class="legend-item"><span class="s-tag shift-1">1</span> Нощна</div>
+                    <div class="legend-item"><span class="s-tag shift-2">2</span> Дневна</div>
+                    <div class="legend-item"><span class="s-tag shift-3">3</span> Следобедна</div>
+                    <div class="legend-item"><span class="rest-circle">П</span> Почивка</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-scroll-area" id="scrollArea">
+            <div id="mainContainer"></div>
+            <div class="bottom-spacer"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const months = ["Януари", "Февруари", "Март", "Април", "Май", "Юни", "Юли", "Август", "Септември", "Октомври", "Ноември", "Декември"];
+    const weekDaysShort = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+    const tableDays = ["нд", "пн", "вт", "ср", "чт", "пт", "сб"];
+    const baseDate = new Date(2026, 2, 1); 
+    const pattern = {
+        'А': ['1','п','п','3','3','3','п','п','2','2','2','п','п','1','1'],
+        'Б': ['п','1','1','1','п','п','3','3','3','п','п','2','2','2','п'],
+        'В': ['2','2','п','п','1','1','1','п','п','3','3','3','п','п','2'],
+        'Г': ['п','п','2','2','2','п','п','1','1','1','п','п','3','3','3'],
+        'Д': ['3','3','3','п','п','2','2','2','п','п','1','1','1','п','п']
+    };
+
+    const mSel = document.getElementById('monthSelect'), 
+          ySel = document.getElementById('yearSelect'), 
+          gSel = document.getElementById('groupSelect'), 
+          scrollArea = document.getElementById('scrollArea'),
+          themeBtn = document.getElementById('themeBtn');
+
+    months.forEach((m, i) => mSel.add(new Option(m, i)));
+    for(let y=2026; y<=2040; y++) ySel.add(new Option(y, y));
+
+    gSel.add(new Option("Всички", "none"));
+    ['А', 'Б', 'В', 'Г', 'Д'].forEach(g => gSel.add(new Option(g, g)));
+
+    function onControlChange(el) {
+        if(el.value !== 'none') {
+            el.classList.add('changed');
+        } else {
+            el.classList.remove('changed');
+        }
+        render();
+        scrollArea.scrollTop = 0;
+    }
+
+    function onGroupChange() {
+        onControlChange(gSel);
+        if(gSel.value === 'none') {
+            const now = new Date();
+            if (now.getFullYear() >= 2026 && now.getFullYear() <= 2040) {
+                mSel.value = now.getMonth();
+                ySel.value = now.getFullYear();
+                mSel.classList.remove('changed');
+                ySel.classList.remove('changed');
+                render();
+            }
+        }
+        scrollToTodayElement();
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        themeBtn.innerHTML = isDark ? '🌙' : '☀️';
+    }
+
+    function goToStyle() {
+        window.location.href = "https://nixun.neocities.org/style";
+    }
+
+    function toggleLegend() {
+        const div = document.getElementById('legendDiv');
+        div.style.display = div.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function render() {
+        const y = parseInt(ySel.value), m = parseInt(mSel.value), focusGroup = gSel.value;
+        const today = new Date(); today.setHours(0,0,0,0);
+        const container = document.getElementById('mainContainer');
+        
+        const lastDayDate = new Date(y, m + 1, 0).getDate();
+
+        if (focusGroup === 'none') {
+            let html = `<table>
+                <thead>
+                    <tr>
+                        <th class="date-header">Дата</th>
+                        <th>А</th><th>Б</th><th>В</th><th>Г</th><th>Д</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            for(let d = 1; d <= lastDayDate; d++) {
+                const date = new Date(y, m, d);
+                const diff = Math.round((date - baseDate)/(1000*60*60*24));
+                let idx = ((diff % 15) + 15) % 15;
+
+                const isToday = (date.getTime() === today.getTime());
+                const isWeekend = (date.getDay() === 0 || date.getDay() === 6) ? 'weekend-text' : '';
+                
+                html += `<tr class="row ${isToday ? 'today' : ''}">
+                    <td class="date-cell ${isWeekend}">${d}<span>${tableDays[date.getDay()]}</span></td>`;
+
+                ['А', 'Б', 'В', 'Г', 'Д'].forEach(group => {
+                    const shift = pattern[group][idx];
+                    let cell = shift === 'п' ? '<span class="rest-text">П</span>' : `<span class="s-tag shift-${shift}">${shift}</span>`;
+                    html += `<td>${cell}</td>`;
+                });
+                html += '</tr>';
+            }
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        } else {
+            let html = `<div class="calendar-container">
+                <div class="calendar-header-sticky">`;
+
+            weekDaysShort.forEach((d, index) => {
+                const isWknd = (index >= 5) ? 'weekend' : '';
+                html += `<div class="cal-header-cell ${isWknd}">${d}</div>`;
+            });
+
+            html += `</div><div class="calendar-grid">`;
+
+            const firstDayOfMonth = new Date(y, m, 1);
+            let startDay = firstDayOfMonth.getDay() - 1;
+            if (startDay === -1) startDay = 6;
+
+            for (let i = 0; i < startDay; i++) {
+                html += `<div class="cal-cell empty"></div>`;
+            }
+
+            for(let d = 1; d <= lastDayDate; d++) {
+                const date = new Date(y, m, d);
+                const diff = Math.round((date - baseDate)/(1000*60*60*24));
+                let idx = ((diff % 15) + 15) % 15;
+
+                const isToday = (date.getTime() === today.getTime());
+                const dayOfWeek = date.getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                
+                const shift = pattern[focusGroup][idx];
+                let shiftsHtml = shift === 'п' ? `<span class="rest-text">П</span>` : `<span class="s-tag shift-${shift}">${shift}</span>`;
+
+                html += `
+                    <div class="cal-cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}">
+                        <div class="cal-date">${d}</div>
+                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; width:100%; flex:1;">
+                            ${shiftsHtml}
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
+    }
+
+    function goToToday() {
+        const now = new Date();
+        if (now.getFullYear() >= 2026 && now.getFullYear() <= 2040) {
+            mSel.value = now.getMonth(); 
+            ySel.value = now.getFullYear();
+            
+            mSel.classList.remove('changed');
+            ySel.classList.remove('changed');
+            
+            render();
+            scrollToTodayElement();
+        }
+    }
+
+    function scrollToTodayElement() {
+        setTimeout(() => {
+            if (gSel.value === 'none') {
+                const t = document.querySelector('.row.today');
+                if(t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                const t = document.querySelector('.cal-cell.today');
+                if(t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
+    }
+
+    window.onload = () => {
+        document.body.classList.remove('dark-mode');
+        themeBtn.innerHTML = '☀️';
+
+        const now = new Date();
+        if (now.getFullYear() >= 2026 && now.getFullYear() <= 2040) {
+            mSel.value = now.getMonth();
+            ySel.value = now.getFullYear();
+        }
+        
+        gSel.value = 'none';
+        gSel.classList.remove('changed');
+
+        render();
+        scrollToTodayElement();
+    };
+</script>
+</body>
+</html>
